@@ -20,6 +20,9 @@ desktop.ini
 # Logs
 *.log
 
+# Test runner outputs (timestamped log klasorleri)
+**/tests/output/
+
 # Local helpers
 _*.ps1
 _tmp/
