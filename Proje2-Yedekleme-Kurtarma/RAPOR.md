@@ -88,6 +88,12 @@ sqlcmd -S . -E -C -i 09_verify_backups.sql
 
 `Ortalama` sütunu, **PERSISTED computed column** olarak tanımlanmıştır (Vize × 0.4 + Final × 0.6). Bu, yedekleme sırasında fiziksel olarak saklanır, restore sonrası hesaplama gerektirmez.
 
+![OkulDB kurulum çıktısı](./docs/01-database-olusturuldu.png)
+*Ekran 1 — `01_setup_database.sql` çıktısı. Veritabanı FULL recovery modelde oluşturuldu, seed verisi yüklendi.*
+
+![OkulDB tabloları](./docs/02-tablolar.png)
+*Ekran 2 — `sys.tables` sorgusu. `Ogrenci`, `Ders`, `[Not]` tabloları oluşmuş.*
+
 ## 5. Yedekleme Stratejisi
 
 Kurumsal bir ortam için önerilen üç kademeli strateji uygulanmıştır:
@@ -102,6 +108,16 @@ Her 15 dakikada -> TRANSACTION LOG
 - **RPO (Recovery Point Objective) = 15 dakika:** Olası veri kaybı penceresi en fazla bir log backup aralığıdır.
 - **RTO (Recovery Time Objective) = dakikalar:** Restore = 1 FULL + 1 DIFF + N LOG. Diff kullanımı, tüm haftalık log'ları sırayla uygulamaktan çok daha hızlıdır.
 - **Disk tasarrufu:** COMPRESSION kullanılmıştır; çoğu DB için %60-75 boyut azalışı sağlar.
+
+### 5.1 Fiziksel Yedek Dosyaları
+
+![C:\SQLBackups klasörü](./docs/03-backup-dosyalari.png)
+*Ekran 3 — `C:\SQLBackups` içinde oluşan `.bak` (FULL/DIFF) ve `.trn` (LOG) dosyaları. İsimlendirme `OkulDB_<TYPE>_<tarih_saat>.bak` formatında.*
+
+### 5.2 Yedek Geçmişi (msdb.dbo.backupset)
+
+![Backup history sorgusu](./docs/06-backup-history.png)
+*Ekran 4 — `msdb.dbo.backupset` üzerinden alınan son yedekler. `type` sütununda `D` = FULL, `I` = DIFF, `L` = LOG. Compression etkin olduğu için dosyalar küçük.*
 
 ## 6. Senaryo: Yanlışlıkla Silinen Veriyi Geri Getirme
 
@@ -134,6 +150,19 @@ Tablonun tamamı boşalıyor. Uygulama hata veriyor, kullanıcılar arıyor, pan
 
 Felaket sonrası **hiçbir işlem yapmadan** mutlaka tail-log backup alınmalıdır. Aksi halde felaket anından son log backup'ına kadar olan işlemler kaybolur.
 
+### 6.4 Otomatik Demo ile Canlı Kanıt
+
+Senaryonun tamamı `tests/disaster-recovery-demo.ps1` script'i ile tek komutta uçtan uca çalıştırılabilir. Demo sırasıyla: kurulum → FULL → veri + DIFF → veri + LOG → zaman damgası → felaket (DELETE) → tail-log → PITR → satır sayısı doğrulaması yapar.
+
+![Demo başlangıcı — 12 satır](./docs/04-demo-basarili1.png)
+*Ekran 5 — Demo'nun ara aşaması: Felaket öncesi `Ogrenci` tablosunda 12 satır mevcut ve güvenli an `@StopAt` olarak kaydedildi.*
+
+![Demo PITR aşaması](./docs/04-demo-basarili2.png)
+*Ekran 6 — Point-in-Time Restore aşaması: FULL + DIFF + birden fazla LOG sırayla `NORECOVERY` ile uygulanıyor, son LOG `STOPAT` ile noktalanıyor.*
+
+![Demo başarı özeti](./docs/04-demo-basarili3.png)
+*Ekran 7 — Demo sonucu: Felaket öncesi 12, felaket sonrası 0, kurtarma sonrası 12 satır. PITR zinciri kayıpsız tamamlandı.*
+
 ## 7. Otomasyon (SQL Server Agent)
 
 `08_sql_agent_backup_job.sql` iki job oluşturur:
@@ -158,6 +187,11 @@ EXEC msdb.dbo.sp_update_job
     @notify_email_operator_name = N'DBA_Operator';
 ```
 
+### Oluşturulan Job'ların Görünümü
+
+![SQL Server Agent jobları](./docs/05-agent-jobs.png)
+*Ekran 8 — `08_sql_agent_backup_job.sql` çalıştıktan sonra `msdb.dbo.sysjobs` üzerinde görünen iki job: `OkulDB_Backup_Plan` (günlük FULL/DIFF) ve `OkulDB_Log_Backup_15dk` (her 15 dk LOG).*
+
 ## 8. Yedeklerin Doğruluğunun Test Edilmesi
 
 Bir yedek, **restore edilene kadar** güvenilir değildir. Üç katmanlı doğrulama stratejisi (`09_verify_backups.sql`):
@@ -165,6 +199,9 @@ Bir yedek, **restore edilene kadar** güvenilir değildir. Üç katmanlı doğru
 1. **`RESTORE VERIFYONLY ... WITH CHECKSUM`** — yedek dosyasının okunabilirliğini ve sayfa checksum'larını kontrol eder (restore etmez).
 2. **`RESTORE HEADERONLY`** — medya içeriğini listeler (hangi DB, ne zaman alınmış, hangi LSN aralığı).
 3. **Restore + `DBCC CHECKDB`** — yedeği ayrı bir DB adına restore et, DBCC ile bütünlük testi yap. Kurumsal ortamlarda bu, haftada bir otomatikleştirilir.
+
+![Yedek doğrulama çıktısı](./docs/07-verify.png)
+*Ekran 9 — `09_verify_backups.sql` çıktısı: `VERIFYONLY` başarılı, `HEADERONLY` medya bilgilerini listeliyor, test DB'sinde `DBCC CHECKDB` temiz.*
 
 ## 9. Felaket Kurtarma Mimari Notu (Database Mirroring / Always On)
 
@@ -191,6 +228,22 @@ Tüm adımlar [sql/](./sql) klasöründeki script'lerde belgelenmiş ve `.sql` d
 - Microsoft Docs — Recovery Models: https://learn.microsoft.com/sql/relational-databases/backup-restore/recovery-models-sql-server
 - Microsoft Docs — SQL Server Agent: https://learn.microsoft.com/sql/ssms/agent/sql-server-agent
 
+## 12. Ekran Görüntüleri Dizini
+
+Tüm ekran görüntüleri [docs/](./docs/) klasöründe bulunur. Rapor içindeki sıraya göre listelenmişlerdir.
+
+| # | Dosya | Açıklama |
+|---|-------|----------|
+| 1 | [01-database-olusturuldu.png](./docs/01-database-olusturuldu.png) | `OkulDB` kurulum çıktısı (FULL recovery model) |
+| 2 | [02-tablolar.png](./docs/02-tablolar.png) | `sys.tables` — `Ogrenci`, `Ders`, `[Not]` tabloları |
+| 3 | [03-backup-dosyalari.png](./docs/03-backup-dosyalari.png) | `C:\SQLBackups` klasöründeki `.bak` ve `.trn` dosyaları |
+| 4 | [06-backup-history.png](./docs/06-backup-history.png) | `msdb.dbo.backupset` üzerinden alınan yedek geçmişi |
+| 5 | [04-demo-basarili1.png](./docs/04-demo-basarili1.png) | Demo ara aşaması — felaket öncesi 12 satır |
+| 6 | [04-demo-basarili2.png](./docs/04-demo-basarili2.png) | Demo PITR aşaması — FULL + DIFF + LOG zinciri |
+| 7 | [04-demo-basarili3.png](./docs/04-demo-basarili3.png) | Demo başarı özeti — tüm veri geri getirildi |
+| 8 | [05-agent-jobs.png](./docs/05-agent-jobs.png) | SQL Server Agent job listesi |
+| 9 | [07-verify.png](./docs/07-verify.png) | `RESTORE VERIFYONLY` + `DBCC CHECKDB` doğrulama çıktısı |
+
 ---
 
-*Bu rapor, çalıştırılabilir T-SQL script'leri ve ekran görüntüleri ile desteklenmektedir. Ekran görüntüleri [docs/](./docs/) klasörüne yüklenecektir.*
+*Bu rapor, çalıştırılabilir T-SQL script'leri ve canlı ortamda alınmış ekran görüntüleri ile desteklenmektedir.*
