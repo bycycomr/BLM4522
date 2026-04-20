@@ -15,9 +15,9 @@ INSERT INTO dbo.Ogrenci (Ad, Soyad, Numara, Bolum) VALUES
  (N'Zeynep', N'Arslan', N'20200006', N'Bilgisayar Mühendisliği'),
  (N'Emre',   N'Polat',  N'20200007', N'Bilgisayar Mühendisliği');
 
-UPDATE dbo.Not SET Vize = 95 WHERE OgrenciID = 1 AND DersID = 1;
+UPDATE dbo.[Not] SET Vize = 95 WHERE OgrenciID = 1 AND DersID = 1;
 
-INSERT INTO dbo.Not (OgrenciID, DersID, Vize, Final) VALUES
+INSERT INTO dbo.[Not] (OgrenciID, DersID, Vize, Final) VALUES
  (6, 1, 85, 90),
  (7, 1, 65, 70);
 GO

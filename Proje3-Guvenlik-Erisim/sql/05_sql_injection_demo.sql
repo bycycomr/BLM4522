@@ -60,8 +60,15 @@ EXEC dbo.usp_AramaSavunmasiz @email = N'x'' OR 1=1 --';
 -- BEKLENEN: Tüm personel listelenir! Maaş bilgileri dahil HER ŞEY sızar.
 
 PRINT N'========== 3. SQL Injection: UNION ile şema sızıntısı ==========';
-PRINT N'Saldırgan girişi: x'' UNION SELECT 1, name, type_desc, ''--'', 0 FROM sys.objects --';
-EXEC dbo.usp_AramaSavunmasiz @email = N'x'' UNION SELECT 1, name, type_desc, ''--'', 0 FROM sys.objects WHERE type IN (''U'',''V'') --';
+PRINT N'Saldırgan girişi: x'' UNION SELECT 1, name COLLATE DATABASE_DEFAULT, type_desc COLLATE DATABASE_DEFAULT, ''--'', 0 FROM sys.objects --';
+BEGIN TRY
+    -- COLLATE DATABASE_DEFAULT: gercek saldirgan da farkli collation hatasini
+    -- bu sekilde bypass eder; demo'da da gostermeli.
+    EXEC dbo.usp_AramaSavunmasiz @email = N'x'' UNION SELECT 1, name COLLATE DATABASE_DEFAULT, type_desc COLLATE DATABASE_DEFAULT, ''--'', 0 FROM sys.objects WHERE type IN (''U'',''V'') --';
+END TRY
+BEGIN CATCH
+    PRINT N'UNION injection hata verdi (error message bile sema sizdirir!): ' + ERROR_MESSAGE();
+END CATCH
 -- BEKLENEN: Veritabanındaki tüm tablo ve view isimleri listelenir.
 
 PRINT N'========== 4. GÜVENLİ prosedür aynı saldırıya karşı ==========';

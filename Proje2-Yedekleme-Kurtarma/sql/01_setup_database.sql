@@ -19,6 +19,11 @@ BEGIN
 END
 GO
 
+/* Gerekli klasörleri oluştur (yoksa) */
+EXEC xp_create_subdir N'C:\SQLData';
+EXEC xp_create_subdir N'C:\SQLBackups';
+GO
+
 /* Veritabanını oluştur */
 CREATE DATABASE OkulDB
 ON PRIMARY
@@ -63,7 +68,7 @@ CREATE TABLE dbo.Ders
     Kredi     TINYINT NOT NULL CHECK (Kredi BETWEEN 1 AND 10)
 );
 
-CREATE TABLE dbo.Not
+CREATE TABLE dbo.[Not]
 (
     NotID       INT IDENTITY(1,1) PRIMARY KEY,
     OgrenciID   INT NOT NULL REFERENCES dbo.Ogrenci(OgrenciID),
@@ -87,16 +92,12 @@ INSERT INTO dbo.Ders (DersKodu, DersAdi, Kredi) VALUES
  (N'BLM3211', N'Veritabanı Yönetim Sistemleri',         4),
  (N'BLM2411', N'Veri Yapıları',                         4);
 
-INSERT INTO dbo.Not (OgrenciID, DersID, Vize, Final) VALUES
+INSERT INTO dbo.[Not] (OgrenciID, DersID, Vize, Final) VALUES
  (1, 1, 70, 85), (1, 2, 60, 72),
  (2, 1, 90, 88), (2, 3, 75, 80),
  (3, 2, 55, 60),
  (4, 1, 82, 79), (4, 2, 88, 92),
  (5, 3, 40, 55);
-GO
-
-/* Yedekleme klasörünü garanti altına almak için (yoksa oluştur) */
-EXEC xp_create_subdir N'C:\SQLBackups';
 GO
 
 PRINT '>>> OkulDB oluşturuldu. Recovery model = FULL. Seed verisi yüklendi.';

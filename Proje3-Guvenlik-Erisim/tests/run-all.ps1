@@ -84,7 +84,7 @@ foreach ($f in $scripts) {
     Write-Step "Calistiriliyor: $f"
     $logFile = Join-Path $OutDir ($f -replace "\.sql$", ".log")
 
-    & sqlcmd -S $Server -E -C -b -i $path 2>&1 | Tee-Object -FilePath $logFile | Out-Null
+    & sqlcmd -S $Server -E -C -I -b -i $path 2>&1 | Tee-Object -FilePath $logFile | Out-Null
     $exit = $LASTEXITCODE
 
     if ($exit -eq 0) {

@@ -29,13 +29,22 @@ BEGIN
 END
 GO
 
-/* 3) Sertifikayı DİSKE YEDEKLE - kritik! */
-BACKUP CERTIFICATE TDE_Cert_PersonelDB
-TO FILE = N'C:\SQLBackups\TDE_Cert_PersonelDB.cer'
-WITH PRIVATE KEY (
-    FILE     = N'C:\SQLBackups\TDE_Cert_PersonelDB.pvk',
-    ENCRYPTION BY PASSWORD = N'Str0ng!PrivateKeyPwd_2026'
-);
+/* 3) Sertifikayı DİSKE YEDEKLE - kritik!
+      Idempotent: dosya zaten varsa yedek alma (SQL Server ustune yazmaz). */
+DECLARE @pvkExists INT;
+EXEC master.dbo.xp_fileexist N'C:\SQLBackups\TDE_Cert_PersonelDB.pvk', @pvkExists OUTPUT;
+IF @pvkExists = 0
+BEGIN
+    BACKUP CERTIFICATE TDE_Cert_PersonelDB
+    TO FILE = N'C:\SQLBackups\TDE_Cert_PersonelDB.cer'
+    WITH PRIVATE KEY (
+        FILE     = N'C:\SQLBackups\TDE_Cert_PersonelDB.pvk',
+        ENCRYPTION BY PASSWORD = N'Str0ng!PrivateKeyPwd_2026'
+    );
+    PRINT N'>>> Sertifika yedeklendi (C:\SQLBackups\TDE_Cert_PersonelDB.*).';
+END
+ELSE
+    PRINT N'>>> Sertifika yedek dosyasi zaten var, atlanildi.';
 GO
 
 /* 4) PersonelDB'de Database Encryption Key oluştur */

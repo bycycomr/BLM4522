@@ -39,7 +39,7 @@ function Step($n, $msg) { Write-Host ""; Write-Host ("=" * 64) -ForegroundColor 
 function Invoke-Sql {
     param([string]$Query, [string]$LogName)
     $logPath = Join-Path $OutDir "$LogName.log"
-    $out = & sqlcmd -S $Server -E -C -b -Q $Query 2>&1
+    $out = & sqlcmd -S $Server -E -C -I -b -Q $Query 2>&1
     $exit = $LASTEXITCODE
     $out | Out-File $logPath -Encoding UTF8
     if ($exit -ne 0) {
@@ -54,7 +54,7 @@ function Invoke-SqlFile {
     param([string]$File, [string]$LogName)
     $path = Join-Path $SqlDir $File
     $logPath = Join-Path $OutDir "$LogName.log"
-    & sqlcmd -S $Server -E -C -b -i $path 2>&1 | Tee-Object -FilePath $logPath | Out-Null
+    & sqlcmd -S $Server -E -C -I -b -i $path 2>&1 | Tee-Object -FilePath $logPath | Out-Null
     if ($LASTEXITCODE -ne 0) { throw "$File basarisiz. Log: $logPath" }
 }
 
@@ -123,7 +123,7 @@ Start-Sleep -Seconds 3  # StopAt'ten sonra felaketin ayri bir anda yasanmasi ici
 
 # ==================== Adim 6: FELAKET ====================
 Step 6 "!!! FELAKET: DELETE FROM dbo.Ogrenci (WHERE unutuldu)"
-Invoke-Sql "USE OkulDB; DELETE FROM dbo.Ogrenci;" "06_disaster"
+Invoke-Sql "USE OkulDB; DELETE FROM dbo.[Not]; DELETE FROM dbo.Ogrenci;" "06_disaster"
 $afterDel = (Invoke-Sql "SET NOCOUNT ON; SELECT COUNT(*) FROM OkulDB.dbo.Ogrenci;" "06_after") | Select-String -Pattern "^\s*(\d+)\s*$" | Select-Object -First 1
 $afterDelN = $afterDel.Matches[0].Groups[1].Value
 Say "!" "Silme sonrasi satir: $afterDelN (beklenen 0)" "Red"
