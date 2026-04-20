@@ -1,0 +1,29 @@
+# Backups (large binary files - keep metadata in reports, not the .bak files)
+**/backups/*.bak
+**/backups/*.trn
+**/backups/*.diff
+
+# OS
+Thumbs.db
+.DS_Store
+desktop.ini
+
+# SQL Server temp
+*.ldf.tmp
+
+# IDE
+.vscode/
+.idea/
+*.suo
+*.user
+
+# Logs
+*.log
+
+# Local helpers
+_*.ps1
+_tmp/
+
+# Editor/assistant local state
+.claude/
+.vscode/
