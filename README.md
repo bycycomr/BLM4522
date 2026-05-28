@@ -1,11 +1,12 @@
 # BLM4522 - Ağ Tabanlı Paralel Dağıtım Sistemleri Projeleri
 
-Bu repo, **BLM4522** dersi kapsamında vize notu için teslim edilen iki projenin tüm kaynak kodlarını, SQL script'lerini ve raporlarını içerir.
+Bu repo, **BLM4522** dersi kapsamında seçilen projelerin tüm kaynak kodlarını, SQL script'lerini ve raporlarını içerir. (7 konudan 5'i seçilmektedir.)
 
 ## Seçilen Projeler
 
 | # | Proje | Konu | Klasör |
 |---|-------|------|--------|
+| 1 | Veritabanı Performans Optimizasyonu ve İzleme | DMV/STATISTICS izleme, indeksleme, disk/yoğunluk yönetimi, RBAC | [Proje1-Performans-Optimizasyonu/](./Proje1-Performans-Optimizasyonu) |
 | 2 | Veritabanı Yedekleme ve Felaketten Kurtarma Planı | Full/Differential/Log backup, Point-in-time restore, otomatik yedekleme | [Proje2-Yedekleme-Kurtarma/](./Proje2-Yedekleme-Kurtarma) |
 | 3 | Veritabanı Güvenliği ve Erişim Kontrolü | Authentication, roller, TDE, SQL Injection testleri, Audit | [Proje3-Guvenlik-Erisim/](./Proje3-Guvenlik-Erisim) |
 
