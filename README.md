@@ -10,8 +10,8 @@ Bu repo, **BLM4522** dersi kapsamında seçilen projelerin tüm kaynak kodların
 
 | # | Proje | Konu | Klasör |
 |---|-------|------|--------|
-| 2 | Veritabanı Yedekleme ve Felaketten Kurtarma Planı | Full/Differential/Log backup, Point-in-time restore, otomatik yedekleme | [Proje2-Yedekleme-Kurtarma/](./Proje2-Yedekleme-Kurtarma) |
-| 3 | Veritabanı Güvenliği ve Erişim Kontrolü | Authentication, roller, TDE, SQL Injection testleri, Audit | [Proje3-Guvenlik-Erisim/](./Proje3-Guvenlik-Erisim) |
+| 2 | Veritabanı Yedekleme ve Felaketten Kurtarma Planı | Full/Differential/Log backup, Point-in-time restore, otomatik yedekleme | [Youtube-Proje2-Yedekleme-Kurtarma/](https://youtu.be/_5jdmQ33LTU) 
+| 3 | Veritabanı Güvenliği ve Erişim Kontrolü | Authentication, roller, TDE, SQL Injection testleri, Audit | [Youtube-Proje3-Guvenlik-Erisim/](https://youtu.be/PAsPF416qdA)
 
 ### 📕 Final Projeleri (3 adet)
 
